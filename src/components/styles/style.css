@@ -1,0 +1,22 @@
+
+.column{
+    display: flex;
+    flex-direction: column;
+}
+
+.content-container{
+    max-width: 650px;
+    margin: 10px  auto  10px auto;
+    background-color: rgba(0, 0, 0, 0.082);
+    border-radius: 10px;
+}
+
+.button-container{
+    display: flex;
+    justify-content: space-between;
+    padding: 20px  10px;
+}
+
+.button-container button{
+    flex-grow: 1;
+}
