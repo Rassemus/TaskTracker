@@ -29,6 +29,10 @@
     background-color: #3939398e; /* Change background color on hover */
   }
   
+  .react-calendar__month-view__days {
+    display: grid !important;
+    grid-template-columns: 14.2% 14.2% 14.2% 14.2% 14.2% 14.2% 14.2%; 
+  }
   
   .react-calendar__tile {
     padding: 10px; /* Add padding to each calendar tile */

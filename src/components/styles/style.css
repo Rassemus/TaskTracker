@@ -4,6 +4,11 @@
     flex-direction: column;
 }
 
+.space-around-row{
+    display: flex;
+    justify-content: space-around;
+}
+
 .content-container{
     max-width: 650px;
     margin: 10px  auto  10px auto;
