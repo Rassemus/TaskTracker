@@ -6,7 +6,19 @@
 
 .space-around-row{
     display: flex;
-    justify-content: space-around;
+    justify-content: space-evenly;
+    align-items: center;
+    
+}
+
+.space-around-row span{
+    flex: 1;
+    margin: 2px 5px;
+}
+
+.scroll-view{
+    overflow: auto;
+    max-height: 13em;
 }
 
 .content-container{
