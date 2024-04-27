@@ -5,6 +5,7 @@ import Button from './Buttons'
 import './styles/calendar-style.css';
 import './styles/style.css';
 import useFetch from '../useFetch.js';
+import { saveData, setDataToLocalStorage, postData, fetchDataFromServer, getDataFromLocalStorage } from './API.js';
 
 const timeToString = (time) => {
     const hours = time.getHours();
@@ -42,38 +43,6 @@ const calculatePauseDuration = (pause) => {
     return null;
 };
 
-const postData = (data) => {
-    // console.log("data to save: ", data)
-    //take data and save to the db
-    // Takes obj {startTime: 10:12, endTime:11.20, duration: 680000}
-    //if offline save to the localStorage
-     const response = fetch("http://localhost:8000/tasks", {
-         method: "POST",
-         cache: "force-cache",
-         headers: {
-             "Content-Type": "application/json"
-         },
-         body: JSON.stringify(data)
-     })
-
-    setDataToLocalStorage(data);
-
-    // console.log(response)
-}
-
-const setDataToLocalStorage = (data) => {
-    localStorage.setItem(localStorage.length, JSON.stringify(data))
-}
-
-const getDataFromLocalStorage = () => {
-    const list = [];
-    for(let i = 0; i < localStorage.length; i++){
-        const data = localStorage.getItem(i.toString());
-        list.push(JSON.parse(data));
-    }
-    return list;
-}
-
 const ButtonContainer = ({taskData, setToTaskList}) => {
     const [info, setInfo] = useState('_ _ _');
     const [isRunning, setIsRunning] = useState(false) //false === paused, true === runniung
@@ -83,9 +52,6 @@ const ButtonContainer = ({taskData, setToTaskList}) => {
     
     const handleStart = () => {
         const startTime = new Date();
-
-        // funktio tietokantaan tallennukseen, jonne tallennetaan koko datenow
-        // Offline tilassa tallennetaan localStorage
         setTaskTime(prevPauses => [...prevPauses, { taskStart: startTime }]);
         setInfo(`Stared at ${timeToString(startTime)}`)
         setStarted(!started);
@@ -136,12 +102,10 @@ const ButtonContainer = ({taskData, setToTaskList}) => {
         totalTaskTime.duration = taskDuration(endTime, taskTime[taskTime.length -1].taskStart, totalPauseTime);
         setTaskTime([...taskTime.slice(0, -1), totalTaskTime])
         
-        
-
         setInfo(`Ended at ${timeToString(endTime)}`)
         setPauses([])
 
-        postData(taskTime[taskTime.length -1]);
+        saveData(taskTime[taskTime.length -1]);
         setToTaskList(getDataFromLocalStorage());
         setStarted(!started);
     }
@@ -151,7 +115,6 @@ const ButtonContainer = ({taskData, setToTaskList}) => {
             <div className='column content-container'>
                 {info}
                 <div className='button-container'> 
-                {/* onko taski käynnissä true tai false jos käynnissä vain pause ja stop nappi aktiivisina jos ei käynnissä niin start nappi aktiivisena */}
                     <Button disabled={started} onClick = {() => handleStart()} color={'green'} label={'Start'} />
                     <Button disabled={!started} onClick = {() => handlePause()} color={'transparent'} label={isRunning ? "Continue" : "Pause"} />
                     <Button disabled={!started || isRunning} onClick = {() => handleStop(pauses)} color={'red'} label={'Stop'} />
@@ -169,7 +132,6 @@ const InfoContainer = ({data}) => {
             <div className='scroll-view'>
                 {
                     data?.map((item, index) => {
-                        // console.log("item: ", item[index].duration)
                         const taskStart = new Date(item?.taskStart)
                         const taskEnd = new Date(item?.taskEnd)
                         return (
@@ -213,7 +175,6 @@ const Tracker = () => {
                 localStorage.clear();
 
                 tasks?.forEach((item, index) => {
-                    // console.log("ITEM: ",item, " Index: ",index);
                     localStorage.setItem(index, JSON.stringify(item));
                 })
                 setToTaskList(getDataFromLocalStorage())
@@ -271,5 +232,7 @@ const Tracker = () => {
         </div>
     )
 }
+
+
 
 export default Tracker;
