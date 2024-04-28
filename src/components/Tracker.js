@@ -5,43 +5,10 @@ import Button from './Buttons'
 import './styles/calendar-style.css';
 import './styles/style.css';
 import useFetch from '../useFetch.js';
-import { saveData, setDataToLocalStorage, postData, fetchDataFromServer, getDataFromLocalStorage } from './API.js';
+import { saveData, getDataFromLocalStorage, postData } from './API.js';
+import { TimeToString, MillisecondsToTime, TaskDuration, CalculatePauseDuration } from './Utils.js';
 
-const timeToString = (time) => {
-    const hours = time.getHours();
-    const minutes = time.getMinutes();
-    const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 
-    return timeString;
-}
-
-const millisecondsToTime = (milliseconds) => {
-    // 1 sec= 1000 millisec
-    // 1 min= 60 sec
-    // 1 h = 60 min
-    const hours = Math.floor(milliseconds / 3600000);
-    const minutes = Math.floor((milliseconds % 3600000) / 60000);
-    const seconds = Math.floor((milliseconds % 60000) / 1000);
-
-    // format string
-    const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-
-    return formattedTime;
-}
-
-const taskDuration = (endTime, startTime, pauseTime) => {
-    const duration = (endTime - startTime) - pauseTime;
-    return duration;
-}
-
-const calculatePauseDuration = (pause) => {
-    if (pause.pauseStart && pause.pauseEnd) {
-      const duration = pause.pauseEnd - pause.pauseStart;
-      // Palauta tauon kesto millisekunteina
-      return duration;
-    }
-    return null;
-};
 
 const ButtonContainer = ({taskData, setToTaskList}) => {
     const [info, setInfo] = useState('_ _ _');
@@ -53,7 +20,7 @@ const ButtonContainer = ({taskData, setToTaskList}) => {
     const handleStart = () => {
         const startTime = new Date();
         setTaskTime(prevPauses => [...prevPauses, { taskStart: startTime }]);
-        setInfo(`Stared at ${timeToString(startTime)}`)
+        setInfo(`Stared at ${TimeToString(startTime)}`)
         setStarted(!started);
     }
 
@@ -72,10 +39,8 @@ const ButtonContainer = ({taskData, setToTaskList}) => {
     const handlePause = () => {
         setIsRunning(prevState => !prevState);
         if(!isRunning){
-            console.log("tauko käynnissä")
             handlePauseStart();
         }else{
-            console.log("Tehtävä käynnissä")
             handlePauseEnd();
         }
     }
@@ -86,7 +51,7 @@ const ButtonContainer = ({taskData, setToTaskList}) => {
 
         // push calculated pause times to the list
         pauses.map((pause, index) => (
-            pauseList.push(calculatePauseDuration(pause))
+            pauseList.push(CalculatePauseDuration(pause))
         ))
         
         // Sum pause times
@@ -99,10 +64,10 @@ const ButtonContainer = ({taskData, setToTaskList}) => {
 
         //Set duration to the state
         const totalTaskTime = taskTime[taskTime.length - 1];
-        totalTaskTime.duration = taskDuration(endTime, taskTime[taskTime.length -1].taskStart, totalPauseTime);
+        totalTaskTime.duration = TaskDuration(endTime, taskTime[taskTime.length -1].taskStart, totalPauseTime);
         setTaskTime([...taskTime.slice(0, -1), totalTaskTime])
         
-        setInfo(`Ended at ${timeToString(endTime)}`)
+        setInfo(`Ended at ${TimeToString(endTime)}`)
         setPauses([])
 
         saveData(taskTime[taskTime.length -1]);
@@ -142,13 +107,13 @@ const InfoContainer = ({data}) => {
                                     {item?.duration && (
                                     <div key={Math.random()+index} className='space-around-row'>
                                         <span key={Math.random()+index}>
-                                            Start time: {timeToString(taskStart)}
+                                            Start time: {TimeToString(taskStart)}
                                         </span> 
                                         <span key={Math.random()+index}>
-                                            End time: {timeToString(taskEnd)}
+                                            End time: {TimeToString(taskEnd)}
                                         </span> 
                                         <span key={Math.random()+index}>
-                                            Duration: {millisecondsToTime(item?.duration)}
+                                            Duration: {MillisecondsToTime(item?.duration)}
                                         </span> 
                                     </div>
                                     )}
@@ -171,21 +136,17 @@ const Tracker = () => {
 
     useEffect(() => {
         if(tasks){
-            if(tasks?.length !== localStorage.length){
                 localStorage.clear();
 
                 tasks?.forEach((item, index) => {
                     localStorage.setItem(index, JSON.stringify(item));
                 })
                 setToTaskList(getDataFromLocalStorage())
-                console.log("Data haettu kannasta")
-            }
         }
     }, [tasks]);
 
 
     const handleDateChange = (date) => {
-        console.log('Selected date:', date);
         setActiveDate(date); // Set selected date to active
     };
 
@@ -197,20 +158,15 @@ const Tracker = () => {
     }
 
     const getSelectedDayData = () => {
-
         let selectedDayData;
-        if(error){
-            selectedDayData = [{error: error}]
-        }else if(isPending){
+
+        if(isPending){
             selectedDayData = [{isPending: 'Loading data...'}]
         }else{
-            {taskList && (
-                 selectedDayData = taskList?.filter(task => {
-                    const taskDate = new Date(task.taskStart);
-                    return taskDate.getDate() === activeDate.getDate() && taskDate.getMonth() === activeDate.getMonth() && taskDate.getFullYear() === activeDate.getFullYear();
-                  })
-                 )
-             }
+            selectedDayData = taskList?.filter(task => {
+                const taskDate = new Date(task.taskStart);
+                return taskDate.getDate() === activeDate.getDate() && taskDate.getMonth() === activeDate.getMonth() && taskDate.getFullYear() === activeDate.getFullYear();
+            })
         }
 
          return selectedDayData;

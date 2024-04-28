@@ -8,30 +8,24 @@ export const fetchDataFromServer = async () => {
 }
 
 export const postData = async (data) => {
-
-    // Tarkista, onko data jo tietokannassa
-    const existingData = await fetchDataFromServer();
-    const isDataAlreadyInServer = existingData.some(existingItem => {
-        console.log(existingData.id, " : ", data.id)
-        // Tässä voit määrittää vertailun existingItem ja uuden datan välillä
-        // Riippuen siitä, millainen ID-järjestelmäsi on, voit esimerkiksi verrata niiden ID:itä
-        return existingItem.id === data.id;
-    });
-
-    if(!isDataAlreadyInServer){
+    try {
         const response = await fetch("http://localhost:8000/tasks", {
-             method: "POST",
-             cache: "force-cache",
-             headers: {
-                 "Content-Type": "application/json"
-             },
-             body: JSON.stringify(data)
+            method: "POST",
+            cache: "force-cache",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
         })
-
+       
         if (!response.ok) {
             throw new Error('Failed to save data to server');
         }
+
+    } catch (error) {
+        console.error("ERROR: ", error)
     }
+
 }
 
 export const saveData = (data) => {

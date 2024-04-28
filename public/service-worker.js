@@ -10,7 +10,8 @@ self.addEventListener('install', e => {
         caches.open(CACHE_NAME).then(cache => {
             return cache.addAll([
                 '/',
-                '/index.js'
+                '/index.js',
+                '/static/js/bundle.js'
             ]).then(() => self.skipWaiting())
         })
     )
@@ -23,6 +24,10 @@ self.addEventListener('activate', e =>{
 
 self.addEventListener('fetch', e => {
     console.log(`Fetching ${e.request.url}`);
+    if (e.request.method === 'POST') {
+        // skip POST-requests
+        return;
+    }
     if(navigator.onLine){
         const fetchRequest = e.request.clone();
         return fetch(fetchRequest).then(
